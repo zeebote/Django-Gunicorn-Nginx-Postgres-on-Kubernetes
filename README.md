@@ -122,7 +122,7 @@ a persitent volume claim, configmap, service, secret (for postgress user and pas
     ace0eda3e3be: Layer already exists
     latest: digest: sha256:f27db317d54186b54e63bafd2f20ae60d9b1adb36e0f1659ac3d71a45c646f35 size: 1996
    ```
-1. Deploy Django to Kubernetes
+1. Deploy Django to Kubernetes - Before deploy make sure update configmap data DJANGO_ALLOWED_HOSTS with your FQDN to serve for the app. 
    ```
    :~/Django-Gunicorn-Nginx-Postgres$ kubectl apply -f deployment/django.yml
    persistentvolume/nfs-polls created
@@ -140,7 +140,7 @@ a persitent volume claim, configmap, service, secret (for postgress user and pas
    polls-app-6768d954f9-mvfz6   1/1     Running   0          81s
    postgres-6675bd8f46-q2d4t    1/1     Running   0          13m
    ```
-1. Build Nginx container
+1. Build Nginx container - Before deploy nginx, you need to update the ingress with the correct FQDN to server for your app
    ```
    :~/Django-Gunicorn-Nginx-Postgres$ docker build -t nginx ./nginx
    Sending build context to Docker daemon  3.072kB
@@ -220,5 +220,13 @@ a persitent volume claim, configmap, service, secret (for postgress user and pas
    Password (again):
    Superuser created successfully.
    ```
-1. Login the app with new account using browser. 
+1. Verify if the app is working. 
+   ```
+   :~/Django-Gunicorn-Nginx-Postgres$ curl http://your.domain.com/polls/
+   <link rel="stylesheet" type="text/css" href="/static/polls/style.css">
+    
+    <p>No polls are available.</p>
+   ```
+   Since we don't have any vote record yet, it should show "No polls are avaiable" and Django app is working ok on Kubernetes.  
+   
    
