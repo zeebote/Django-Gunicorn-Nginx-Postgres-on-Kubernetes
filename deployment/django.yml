@@ -12,7 +12,7 @@ spec:
   persistentVolumeReclaimPolicy: Delete
   nfs:
     path: /vol1/kpv/polls
-    server: 172.26.1.128
+    server: your-nfs-server
 
 ---
 
