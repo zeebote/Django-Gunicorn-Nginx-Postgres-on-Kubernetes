@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-polls
+spec:
+  storageClassName: nfs
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  nfs:
+    path: /vol1/kpv/polls
+    server: 172.26.1.128
+
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nfs-pvc
+  namespace: apps
+spec:
+  storageClassName: nfs
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: polls-config
+  labels:
+    k8s-app: polls
+  namespace: apps
+data:
+  # update allow host to your serving hostname
+  # This should match with ingress host rule too 
+  DJANGO_ALLOWED_HOSTS: "apps.your-domain.com"
+  DEBUG: "False"
+  DATABASE_NAME: "postgres"
+  DATABASE_HOST: "postgres"
+  DATABASE_PORT: "5432"
+
+---
+
+kind: Secret
+apiVersion: v1
+metadata:
+  name: polls-secret
+  namespace: apps
+  labels:
+    k8s-app: polls
+type: Opaque
+data:
+  #String output from cli: echo -n "Django secret key" | base64
+  DJANGO_SECRET_KEY: eXF1XmY1eS1xdjd3bWt2MiF3aWcxcTReJWxna2IxeDQ0NDQtay0rX2Y1My0wZyotZTk=
+  DATABASE_USERNAME: cG9zdGdyZXM=
+  DATABASE_PASSWORD: cG9zdGdyZXM=
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: polls
+  labels:
+    k8s-app: polls
+  namespace: apps
+spec:
+  selector:
+    k8s-app: polls
+  ports:
+    - port: 8000
+      targetPort: 8000
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polls-app
+  labels:
+    k8s-app: polls
+  namespace: apps
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      k8s-app: polls
+  template:
+    metadata:
+      labels:
+        k8s-app: polls
+    spec:
+      containers:
+        - image: trucv/polls3:latest
+          imagePullPolicy: "Always"
+          name: polls
+          envFrom:
+          - secretRef:
+              name: polls-secret
+          - configMapRef:
+              name: polls-config
+          ports:
+            - containerPort: 8000
+              name: gunicorn
+          volumeMounts:
+            - mountPath: /apps/polls/static
+              name: staticfiles
+      volumes:
+        - name: staticfiles
+          persistentVolumeClaim:
+            claimName: nfs-pvc
+

@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apps
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-postgresdb
+spec:
+  storageClassName: nfs
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  nfs:
+    path: /vol1/kpv/postgresdb
+    server: your-nfs-server
+
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-pv-claim
+  labels:
+    k8s-app: postgres
+  namespace: apps
+spec:
+  storageClassName: nfs
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    k8s-app: postgres
+  name: postgres
+  namespace: apps
+spec:
+  ports:
+    - port: 5432
+      name: postgres
+  clusterIP: None
+  selector:
+    k8s-app: postgres
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  labels:
+    k8s-app: postgres
+  namespace: apps
+data:
+  POSTGRES_DB: postgres
+  POSTGRES_USER: postgres
+
+---
+
+kind: Secret
+apiVersion: v1
+metadata:
+  name: postgres-secret
+  namespace: apps
+  labels:
+    k8s-app: postgres
+type: Opaque
+data:
+  #This is string output from cli: echo -n "postgres-password" | base64
+  POSTGRES_PASSWORD: cG9zdGdyZXM=  
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels: 
+      k8s-app: postgres
+  template:
+    metadata:
+      labels:
+        k8s-app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres
+          imagePullPolicy: "IfNotPresent"
+          ports:
+          - containerPort: 5432
+            name: postgresdb
+          envFrom:
+          - configMapRef:
+              name: postgres-config
+          - secretRef:
+              name: postgres-secret 
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgresdb
+      volumes:
+        - name: postgresdb
+          persistentVolumeClaim:
+            claimName: postgres-pv-claim      
