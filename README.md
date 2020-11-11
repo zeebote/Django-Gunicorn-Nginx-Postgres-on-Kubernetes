@@ -227,6 +227,6 @@ a persitent volume claim, configmap, service, secret (for postgress user and pas
     
     <p>No polls are available.</p>
    ```
-   Since we don't have any vote record yet, it should show "No polls are avaiable" and Django app is working ok on Kubernetes.  
+   Since we don't have any vote record yet, it should show "No polls are avaiable" as it suppose to. Your Django app is running ok on Kubernetes.  
    
    
