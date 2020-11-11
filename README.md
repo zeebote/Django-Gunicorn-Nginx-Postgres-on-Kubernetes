@@ -82,7 +82,7 @@ there are a lot of documents show how to do this. I also have a repo that can be
     └── README.md
    ```
 1. Deploy Postgres to Kubernetes - We use official Postgress container on Docker hub - This deployment will create a namespace "apps", Persistent nfs volume, 
-a persitent volume claim, configmap, service, secret (for postgress user and password), and a pod which host postgres container.
+a persitent volume claim, configmap, service, secret (for postgress user and password), and a pod which host postgres container. For this setup we postgress as user name and password for database. You should change them and convert to base64 encoding then update to deployment secret. 
    ```
    Django-Gunicorn-Nginx-Postgres$ kubectl apply -f deployment/postgres.yml
    namespace/apps created
