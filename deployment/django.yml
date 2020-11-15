@@ -12,7 +12,7 @@ spec:
   persistentVolumeReclaimPolicy: Delete
   nfs:
     path: /vol1/kpv/polls
-    server: your-nfs-server
+    server: your.fns.server
 
 ---
 
@@ -41,7 +41,7 @@ metadata:
 data:
   # update allow host to your serving hostname
   # This should match with ingress host rule too 
-  DJANGO_ALLOWED_HOSTS: "apps.your-domain.com"
+  DJANGO_ALLOWED_HOSTS: "*"
   DEBUG: "False"
   DATABASE_NAME: "postgres"
   DATABASE_HOST: "postgres"
@@ -76,7 +76,9 @@ spec:
   selector:
     k8s-app: polls
   ports:
-    - port: 8000
+    - name: django
+      protocol: TCP
+      port: 8000
       targetPort: 8000
 
 ---
@@ -99,7 +101,7 @@ spec:
         k8s-app: polls
     spec:
       containers:
-        - image: trucv/polls3:latest
+        - image: trucv/polls:latest
           imagePullPolicy: "Always"
           name: polls
           envFrom:
