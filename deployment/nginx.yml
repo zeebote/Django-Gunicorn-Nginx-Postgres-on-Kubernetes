@@ -14,6 +14,23 @@ spec:
 
 ---
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-exporter
+  labels:
+    k8s-app: nginx-exporter
+  namespace: apps
+spec:
+  selector:
+    k8s-app: nginx
+  ports:
+    - name: nginx-exporter
+      port: 9113 
+      targetPort: 9113
+
+---
+
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -22,7 +39,7 @@ metadata:
 spec:
   rules:
   # This is your serving URL, it shout match with Django allow host in poll-configmap
-  - host: apps.your-domain.com
+  - host: your.serving.domain.com
     http:
       paths:
       - backend:
@@ -59,6 +76,13 @@ spec:
           volumeMounts:
             - mountPath: /apps/polls/static
               name: staticfiles
+        - name: nginx-exporter
+          image: nginx/nginx-prometheus-exporter:0.8.0
+          args:
+            - -nginx.scrape-uri=http://localhost/nginx/status
+          ports:
+            - containerPort: 9113
+              name: nginx-exporter
       volumes:
         - name: staticfiles
           persistentVolumeClaim:
