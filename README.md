@@ -229,4 +229,7 @@ a persitent volume claim, configmap, service, secret (for postgress user and pas
    ```
    Since we don't have any vote record yet, it should show "No polls are avaiable" as it suppose to. Your Django app is running ok on Kubernetes.  
    
+1. Next step? Monitoring Django, Nginx, and Postgres.
+   The app is including exporter for Django (with DB monitoring) and Nginx for Prometheus to scape the status.  
+   
    
